@@ -1,0 +1,53 @@
+<header class="encabezado">
+  <div class="contenedor">
+    <a class="marca" href="#portada" aria-label="Ruta Cafeína Mérida, ir al inicio">
+      <img src="img/marca-blanca.png" alt="Ruta Cafeína" width="118" height="64">
+      <span>PRIVADO</span>
+    </a>
+    <button class="boton-menu" id="boton-menu" aria-controls="menu" aria-expanded="false">MENÚ</button>
+    <nav class="menu" id="menu" aria-label="Secciones del sitio privado">
+      <ul id="menu-lista"></ul>
+      <button type="button" class="salir" id="salir">Salir</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="portada" id="portada" data-menu="Portada">
+    <div class="contenedor">
+      <p class="etiqueta">Administración &nbsp;·&nbsp; Uso interno</p>
+      <h1>Ruta Cafeína Mérida, <em>panel privado</em></h1>
+      <p class="bajada">Aquí vive lo que no se publica en el sitio abierto: la competencia en Mérida, los argumentos de venta y lo que se vaya sumando del plan de negocios.</p>
+      <div class="datos-origen">
+        <span><b>{{N_COMP}}</b> competidores</span>
+        <span><b>{{N_DIAS}}</b> diapositivas</span>
+        <span>Actualizado el <b>{{ACTUALIZACION}}</b></span>
+      </div>
+      <div class="acciones">
+        <a class="boton boton-oro" href="#competencia">Ver competencia</a>
+        <a class="boton boton-linea" href="#competencia-diapositivas">Abrir diapositivas</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion competencia comp" id="competencia" data-menu="Competencia" aria-label="Competencia">
+    <div class="contenedor">
+      <div class="encabezado-seccion">
+        <p class="etiqueta">Competencia</p>
+        <h2>Competencia en Mérida</h2>
+        <p>Quién vende café a nuestros prospectos, dónde deja un hueco cada uno y qué responde Ruta Cafeína. Contenido interno: no compartir.</p>
+      </div>
+      <div class="comp-raiz"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="pie">
+  <div class="contenedor">
+    <img src="img/logo-ruta-cafeina-merida.png" alt="Ruta Cafeína Mérida" width="150">
+    <div class="creditos">
+      <p>© <span id="anio">2026</span> Ruta Cafeína Mérida · Mérida, Yucatán · 999 259 8155</p>
+      <p>Uso interno. Los precios de la competencia son públicos, de noviembre de 2026, y deben confirmarse con cada cliente.</p>
+    </div>
+  </div>
+</footer>

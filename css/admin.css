@@ -1,0 +1,31 @@
+/* Sitio privado: puerta de acceso y ajustes. Usa los tokens de estilos.css. */
+[hidden] { display: none !important; }
+.puerta {
+  min-height: 100vh; min-height: 100dvh; display: grid; place-items: center;
+  padding: 32px var(--gutter-r) 32px var(--gutter-l); position: relative; isolation: isolate;
+  background: var(--tostado) url("../img/hero-montanas.jpg") center 40% / cover no-repeat;
+}
+.puerta::before { content: ""; position: absolute; inset: 0; z-index: -1; background: rgba(14,12,10,0.86); }
+.puerta-caja {
+  width: 100%; max-width: 420px; display: grid; gap: 14px; padding: clamp(24px, 5vw, 36px);
+  background: var(--tostado-2); border: 1px solid var(--linea); border-radius: var(--radio);
+}
+.puerta-caja img { width: 130px; height: auto; margin-bottom: 6px; }
+.puerta-caja h1 { font-size: 2rem; font-weight: 500; }
+.puerta-texto { color: var(--texto-suave); font-size: var(--t-sm); }
+.puerta form { display: grid; gap: 10px; margin-top: 6px; }
+.puerta label { font-size: var(--t-xs); font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--texto-suave); }
+.puerta input {
+  width: 100%; padding: 14px 14px; border-radius: var(--radio); border: 1px solid var(--linea);
+  background: var(--tostado); color: var(--crema); font: 400 1rem var(--f-texto);
+}
+.puerta input:focus-visible { outline: 2px solid var(--oro); outline-offset: 2px; border-color: var(--oro); }
+.puerta .boton { justify-content: center; cursor: pointer; width: 100%; margin-top: 4px; }
+.puerta .boton:disabled { opacity: .6; cursor: default; }
+.puerta-msg { min-height: 1.4em; color: #e3a29b; font-size: var(--t-sm); }
+.salir {
+  background: none; border: 1px solid var(--linea); color: var(--crema-2); border-radius: var(--radio);
+  padding: 8px 14px; font: 600 var(--t-xs)/1 var(--f-texto); letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer;
+}
+.salir:hover { border-color: var(--oro); color: var(--oro); }
+@media (max-width: 920px) { .salir { margin-top: 14px; align-self: flex-start; } }
