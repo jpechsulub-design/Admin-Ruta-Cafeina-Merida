@@ -265,6 +265,7 @@
       var k = tbody.children.length;
       if (!k) return 0;
       var base = cuerpo.getBoundingClientRect().top, alto = cuerpo.clientHeight, cabe = 0;
+      if (!alto) { while (tbody.children.length > 8) tbody.removeChild(tbody.lastChild); return tbody.children.length; } /* pantalla oculta: se recalcula al mostrarse */
       for (var j = 0; j < k; j++) {
         if (tbody.children[j].getBoundingClientRect().bottom - base <= alto + 0.5) cabe = j + 1; else break;
       }
