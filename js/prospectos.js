@@ -195,7 +195,7 @@
       return regs.filter(function (r) {
         if (fEst && r.estatus !== fEst) return false;
         if (fPri && r.prioridad !== fPri) return false;
-        if (fZona && r.zona !== fZona) return false;
+        if (fZona && norm(r.zona) !== norm(fZona)) return false;
         if (fTipo && r.tipo !== fTipo) return false;
         for (var i = 0; i < tokens.length; i++) if (r._b.indexOf(tokens[i]) < 0) return false;
         return true;
@@ -207,6 +207,29 @@
       return td;
     }
 
+    /* Zonas base + las que se hayan capturado en los registros (sin repetir por mayúsculas o acentos). */
+    function zonasActuales() {
+      var vistas = {}, extra = [];
+      ZONAS.forEach(function (z) { vistas[norm(z)] = 1; });
+      regs.forEach(function (r) {
+        var z = (r.zona || '').trim(), k = norm(z);
+        if (z && !vistas[k]) { vistas[k] = 1; extra.push(z); }
+      });
+      extra.sort(function (a, b) { return collator ? collator.compare(a, b) : a.localeCompare(b); });
+      return ZONAS.concat(extra);
+    }
+    var firmaZonas = '';
+    function refrescarZonas() {
+      var lista = zonasActuales(), firma = lista.join('\u0001');
+      if (firma === firmaZonas) return;
+      firmaZonas = firma;
+      var sel = fZ.s;
+      if (fZona && !lista.some(function (z) { return norm(z) === norm(fZona); })) fZona = '';
+      sel.innerHTML = '';
+      var o0 = el('option', null, 'Todos'); o0.value = ''; sel.appendChild(o0);
+      lista.forEach(function (z) { var o = el('option', null, z); o.value = z; sel.appendChild(o); });
+      sel.value = fZona;
+    }
     function filaDe(r) {
       var tr = el('tr'); tr.dataset.id = r.id; tr.tabIndex = 0;
       if (r.id === sel) { tr.className = 'sel'; tr.setAttribute('aria-selected', 'true'); }
@@ -265,6 +288,7 @@
 
     function pintarFilas() {
       ths();
+      refrescarZonas();
       var lista = visibles();
       totalLista = lista.length;
       while (inicio >= lista.length && inicio > 0) { inicio = pila.length ? pila.pop() : 0; }
@@ -400,7 +424,7 @@
       var caja = nuevoModal(r ? 'Editar prospecto' : 'Agregar prospecto', 'ancha');
       var form = el('form', 'pros-form'); form.noValidate = true;
       caja.appendChild(form);
-      var dl = el('datalist'); dl.id = 'pf-zonas'; ZONAS.forEach(function (z) { var o = el('option'); o.value = z; dl.appendChild(o); }); form.appendChild(dl);
+      var dl = el('datalist'); dl.id = 'pf-zonas'; zonasActuales().forEach(function (z) { var o = el('option'); o.value = z; dl.appendChild(o); }); form.appendChild(dl);
       var f = {};
       f.negocio = campo(form, 'negocio', 'Nombre del negocio', 'text', base.negocio, { req: true, ancho: 'c2' });
       f.tipo = campo(form, 'tipo', 'Tipo de prospecto', 'select', base.tipo, { opciones: TIPOS });
