@@ -1,0 +1,145 @@
+/* ==========================================================
+   Seguimiento de prospectos. Usa los colores y tipos de estilos.css.
+   La barra de acciones vive FUERA del área que se desplaza, por eso
+   no desaparece al recorrer los registros hacia arriba o abajo.
+   ========================================================== */
+.prospectos { background: var(--tostado); border-top: 1px solid var(--linea); }
+.prospectos .contenedor.ancho { max-width: 1560px; }
+.prospectos .encabezado-seccion { max-width: 70ch; }
+
+.pros-solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.pros-panel {
+  display: flex; flex-direction: column;
+  height: clamp(480px, 78vh, 860px);
+  border: 1px solid var(--linea); border-radius: var(--radio); background: var(--tostado-2);
+  min-width: 0; overflow: hidden;
+}
+.pros-barra {
+  flex: none; display: grid; gap: 12px; padding: 14px 16px 12px;
+  background: var(--tostado-2); border-bottom: 1px solid var(--linea);
+}
+.pros-fila { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; }
+.pros-menu { display: flex; flex-wrap: wrap; gap: 8px; }
+.pros-buscar { flex: 1 1 260px; min-width: 0; display: block; }
+.pros-buscar input, .pros-filtro select, .pros-campo input, .pros-campo select, .pros-campo textarea {
+  width: 100%; min-width: 0; font: inherit; font-size: var(--t-sm); color: var(--crema);
+  background: var(--tostado); border: 1px solid var(--linea); border-radius: var(--radio); padding: 10px 12px;
+  color-scheme: dark;
+}
+.pros-buscar input { padding-left: 14px; }
+.pros-buscar input:focus, .pros-filtro select:focus, .pros-campo input:focus, .pros-campo select:focus, .pros-campo textarea:focus {
+  outline: 2px solid var(--oro); outline-offset: 1px; border-color: var(--oro);
+}
+.pros-fila2 { gap: 10px 14px; }
+.pros-filtro { display: flex; align-items: center; gap: 8px; font-size: var(--t-xs); letter-spacing: 0.12em; text-transform: uppercase; color: var(--texto-suave); }
+.pros-filtro select { width: auto; padding: 7px 10px; letter-spacing: 0; text-transform: none; }
+.pros-cuenta { margin: 0 auto 0 4px; font-size: var(--t-sm); color: var(--texto-suave); font-variant-numeric: tabular-nums; }
+.pros-extras { display: flex; flex-wrap: wrap; gap: 8px; }
+.pros-estado { margin: 0; min-height: 1.2em; font-size: var(--t-sm); color: var(--oro-claro); }
+.pros-estado:empty { display: none; }
+.pros-estado.mal { color: #e58b82; }
+
+.pros-btn {
+  font: 600 var(--t-xs)/1 var(--f-texto); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  padding: 11px 16px; border-radius: var(--radio); border: 1px solid var(--linea); background: none; color: var(--crema);
+}
+.pros-btn:hover:not(:disabled) { background: rgba(201,163,90,0.14); border-color: var(--oro); }
+.pros-btn:focus-visible { outline: 2px solid var(--oro); outline-offset: 2px; }
+.pros-btn:disabled { opacity: .4; cursor: not-allowed; }
+.pros-btn.oro { background: var(--oro); color: var(--tostado); border-color: var(--oro); }
+.pros-btn.oro:hover:not(:disabled) { background: var(--oro-claro); }
+.pros-btn.peligro { border-color: rgba(229,139,130,.6); color: #f0a79f; }
+.pros-btn.peligro:hover:not(:disabled) { background: rgba(142,43,35,.35); border-color: #e58b82; }
+.pros-btn.suave { color: var(--texto-suave); text-transform: none; letter-spacing: 0.02em; font-weight: 500; font-size: var(--t-sm); padding: 8px 12px; }
+
+/* Tabla */
+.pros-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; position: relative; -webkit-overflow-scrolling: touch; }
+.pros-scroll:focus-visible { outline: 2px solid var(--oro); outline-offset: -2px; }
+.pros-tabla { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1500px; font-size: var(--t-sm); }
+.pros-tabla thead th {
+  position: sticky; top: 0; z-index: 3; background: #231e19; text-align: left; white-space: nowrap;
+  border-bottom: 1px solid var(--oro); padding: 0; font-weight: 600;
+}
+.pros-tabla thead th:not(:has(button)) { padding: 12px 14px; font-size: var(--t-xs); letter-spacing: 0.14em; text-transform: uppercase; color: var(--texto-suave); }
+.pros-th {
+  all: unset; box-sizing: border-box; cursor: pointer; display: block; width: 100%; padding: 12px 14px;
+  font: 600 var(--t-xs)/1.2 var(--f-texto); letter-spacing: 0.14em; text-transform: uppercase; color: var(--texto-suave);
+}
+.pros-th::after { content: attr(data-flecha); margin-left: 6px; color: var(--oro); font-size: .7em; }
+.pros-th:hover { color: var(--crema); }
+.pros-th:focus-visible { outline: 2px solid var(--oro); outline-offset: -2px; }
+th.activo .pros-th { color: var(--oro-claro); }
+.pros-tabla td { padding: 11px 14px; border-bottom: 1px solid var(--linea); vertical-align: top; color: var(--crema-2); background: var(--tostado-2); overflow-wrap: anywhere; min-width: 7rem; }
+.pros-tabla td.ancha { min-width: 15rem; }
+.pros-tabla td.notas { min-width: 22rem; max-width: 34rem; color: var(--texto-suave); }
+.pros-tabla td.tel { white-space: nowrap; min-width: 9rem; }
+.pros-tabla td.fechas { min-width: 15rem; }
+.pros-tabla td.nada { color: #6f655a; }
+.pros-tabla .fija { position: sticky; left: 0; z-index: 2; min-width: 14rem; max-width: 18rem; box-shadow: 1px 0 0 var(--linea); }
+.pros-tabla thead th.fija { z-index: 4; background: #231e19; }
+.pros-tabla td.neg { font-family: var(--f-display); font-size: 1.2rem; font-weight: 600; color: var(--crema); line-height: 1.2; }
+.pros-tabla tbody tr { cursor: pointer; }
+.pros-tabla tbody tr:hover td { background: #26201b; }
+.pros-tabla tbody tr:focus-visible { outline: 2px solid var(--oro); outline-offset: -2px; }
+.pros-tabla tbody tr.sel td { background: #3a2e1d; border-bottom-color: var(--oro); }
+
+.pri { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font-weight: 700; font-size: var(--t-xs); border: 1px solid currentColor; }
+.pri-A { color: var(--oro-claro); background: rgba(201,163,90,.18); }
+.pri-B { color: var(--crema-2); }
+.pri-C { color: var(--texto-suave); opacity: .85; }
+.est { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: var(--t-xs); font-weight: 600; letter-spacing: .04em; border: 1px solid var(--linea); white-space: nowrap; }
+.est-0 { color: var(--crema-2); }
+.est-1 { color: var(--oro-claro); border-color: var(--oro); background: rgba(201,163,90,.14); }
+.est-2 { color: #e9c16f; border-color: #8a6d2d; background: rgba(233,193,111,.1); }
+.est-3 { color: #a9d6a0; border-color: #4d7a46; background: rgba(120,190,110,.12); }
+.est-4 { color: #cf8a82; border-color: #7a3a33; background: rgba(142,43,35,.2); }
+.est-fecha { display: block; margin-top: 6px; font-size: var(--t-xs); color: var(--texto-suave); }
+.fch { display: block; font-size: var(--t-xs); color: var(--texto-suave); line-height: 1.6; }
+.fch b { font-weight: 600; color: var(--crema-2); }
+.pros-vacio { margin: 0; padding: 36px 20px; text-align: center; color: var(--texto-suave); }
+.pros-pie { margin: 12px 2px 0; font-size: var(--t-xs); color: var(--texto-suave); letter-spacing: .04em; }
+
+/* Menú de clic derecho */
+.pros-ctx { position: fixed; z-index: 200; background: var(--tostado-2); border: 1px solid var(--oro); border-radius: var(--radio); padding: 6px; display: grid; min-width: 11rem; box-shadow: 0 12px 32px rgba(0,0,0,.5); }
+.pros-ctx button { all: unset; box-sizing: border-box; cursor: pointer; padding: 10px 12px; font-size: var(--t-sm); color: var(--crema); border-radius: 3px; }
+.pros-ctx button:hover, .pros-ctx button:focus-visible { background: rgba(201,163,90,.2); }
+
+/* Ventanas */
+body.pros-bloqueo { overflow: hidden; }
+.pros-modal { position: fixed; inset: 0; z-index: 150; background: rgba(8,6,5,.78); display: grid; place-items: center; padding: 16px; overflow: auto; }
+.pros-caja { width: 100%; max-width: 760px; max-height: calc(100vh - 32px); overflow: auto; background: var(--tostado-2); border: 1px solid var(--oro); border-radius: var(--radio); padding: clamp(18px, 3vw, 30px); color: var(--crema); }
+.pros-caja.ancha { max-width: 880px; }
+.pros-caja.angosta { max-width: 460px; }
+.pros-caja h3 { font-size: var(--t-xl); margin: 0 0 18px; }
+.pros-conf { color: var(--crema-2); margin: 0 0 18px; }
+.pros-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 16px; }
+.pros-campo { display: grid; gap: 6px; align-content: start; min-width: 0; }
+.pros-campo.c2 { grid-column: span 2; }
+.pros-campo.c3 { grid-column: 1 / -1; }
+.pros-campo label { font-size: var(--t-xs); letter-spacing: .12em; text-transform: uppercase; color: var(--texto-suave); }
+.pros-campo textarea { resize: vertical; min-height: 6rem; }
+.pros-fechas { grid-column: 1 / -1; border: 1px solid var(--linea); border-radius: var(--radio); padding: 12px 14px 16px; margin: 0; min-width: 0; }
+.pros-fechas legend { padding: 0 8px; font-size: var(--t-xs); letter-spacing: .14em; text-transform: uppercase; color: var(--oro); }
+.pros-ayuda { margin: 0 0 12px; font-size: var(--t-xs); color: var(--texto-suave); max-width: 70ch; }
+.pros-fechas-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.pros-acciones { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+.pros-caja > .pros-acciones { margin-top: 12px; }
+.pros-error { grid-column: 1 / -1; margin: 0; color: #f0a79f; font-size: var(--t-sm); }
+
+@media (max-width: 1000px) {
+  .pros-fechas-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .pros-panel { height: 84vh; }
+  .pros-barra { padding: 12px; }
+  .pros-menu { width: 100%; }
+  .pros-menu .pros-btn { flex: 1 1 0; text-align: center; }
+  .pros-cuenta { margin: 0; width: 100%; }
+  .pros-form { grid-template-columns: 1fr; }
+  .pros-campo.c2, .pros-campo.c3 { grid-column: auto; }
+  .pros-fechas-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pros-modal { padding: 0; place-items: stretch; }
+  .pros-caja, .pros-caja.ancha { max-width: none; max-height: none; min-height: 100%; border-radius: 0; }
+  .pros-caja.angosta { min-height: 0; align-self: center; margin: 16px; width: auto; }
+}

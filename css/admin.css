@@ -29,3 +29,5 @@
 }
 .salir:hover { border-color: var(--oro); color: var(--oro); }
 @media (max-width: 920px) { .salir { margin-top: 14px; align-self: flex-start; } }
+
+.pros-aviso { font-size: var(--t-sm); border-left: 2px solid var(--oro); padding-left: 12px; color: var(--crema-2); }

@@ -308,6 +308,48 @@
     if (leerRuta()) alCambiarRuta();
   };
 
+  /* ---------- Prospectos: se guardan en este navegador (localStorage) ---------- */
+  var CLAVE_LOCAL = 'rc_prospectos_v1';
+  function montarProspectos(semilla) {
+    var raiz = document.querySelector('#prospectos .pros-raiz');
+    if (!raiz || !window.RC_prospectos) return;
+    var mapa = {}, subs = [], persiste = true;
+    function leer() {
+      try {
+        var t = localStorage.getItem(CLAVE_LOCAL);
+        if (t) { var j = JSON.parse(t); if (j && Array.isArray(j.regs)) return j.regs; }
+      } catch (e) { persiste = false; }
+      return null;
+    }
+    var previos = leer();
+    (previos || semilla).forEach(function (r) { mapa[r.id] = r; });
+    function grabar() {
+      if (!persiste) return;
+      try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify({ v: 1, regs: Object.keys(mapa).map(function (k) { return mapa[k]; }) })); }
+      catch (e) { persiste = false; aviso(); }
+    }
+    function aviso() {
+      var a = document.querySelector('#prospectos .pros-aviso');
+      if (a) a.textContent = 'Este navegador no permite guardar datos: los cambios se perderán al cerrar la página. Usa «Respaldo» antes de salir.';
+    }
+    function lista() { return Object.keys(mapa).map(function (k) { return mapa[k]; }).sort(function (a, b) { return a.orden - b.orden; }); }
+    function avisar() { subs.forEach(function (f) { f(lista()); }); }
+    if (!previos) grabar();
+    if (!persiste) aviso();
+    window.RC_prospectos.montar(raiz, {
+      respaldo: true,
+      suscribir: function (ok) { subs.push(ok); setTimeout(function () { ok(lista()); }, 0); },
+      guardar: function (r) { mapa[r.id] = JSON.parse(JSON.stringify(r)); grabar(); avisar(); return Promise.resolve(); },
+      borrar: function (id) { delete mapa[id]; grabar(); avisar(); return Promise.resolve(); },
+      descargar: function (nombre, texto, tipo) {
+        var b = new Blob([texto], { type: tipo || 'text/plain' }), u = URL.createObjectURL(b), a = document.createElement('a');
+        a.href = u; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(u); }, 4000); return Promise.resolve();
+      }
+    });
+    if (location.hash === '#prospectos') setTimeout(function () { var s = document.getElementById('prospectos'); if (s) s.scrollIntoView(); }, 200);
+  }
+
   /* ---------- Puerta con contraseña ---------- */
   function b64(t) { var b = atob(t), a = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return a; }
 
@@ -344,7 +386,7 @@
         document.body.classList.add('abierto');
         var s = document.createElement('script');
         s.src = 'js/main.js';
-        s.onload = function () { window.RC_competencia(p.datos); };
+        s.onload = function () { window.RC_competencia(p.datos); montarProspectos(p.datos.prospectos || []); };
         document.body.appendChild(s);
         var salir = document.getElementById('salir');
         if (salir) salir.addEventListener('click', function () { location.hash = ''; location.reload(); });
