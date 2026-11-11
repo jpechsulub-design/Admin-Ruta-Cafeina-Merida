@@ -10,7 +10,7 @@
 
   var ESTATUS = ['Prospecto', 'Muestra', 'Espera Definición', 'Aprobado', 'Descartado'];
   var PRIORIDADES = ['A', 'B', 'C'];
-  var ZONAS = ['Norte', 'Centro', 'Por verificar'];
+  var ZONAS = ['Paseo de Montejo', 'García Lavín', 'Av. Yucatán', 'Francisco de Montejo', 'Las Américas', 'Norte', 'Centro', 'Por verificar'];
   var COLUMNAS = [
     { k: 'negocio', t: 'Nombre del negocio' },
     { k: 'contacto', t: 'Contacto' },

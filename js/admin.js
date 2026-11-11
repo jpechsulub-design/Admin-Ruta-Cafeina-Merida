@@ -313,19 +313,26 @@
   function montarProspectos(semilla) {
     var raiz = document.querySelector('#prospectos .pros-raiz');
     if (!raiz || !window.RC_prospectos) return;
-    var mapa = {}, subs = [], persiste = true;
+    var mapa = {}, subs = [], persiste = true, conocidos = null;
     function leer() {
       try {
         var t = localStorage.getItem(CLAVE_LOCAL);
-        if (t) { var j = JSON.parse(t); if (j && Array.isArray(j.regs)) return j.regs; }
+        if (t) { var j = JSON.parse(t); if (j && Array.isArray(j.regs)) { conocidos = Array.isArray(j.semilla) ? j.semilla : null; return j.regs; } }
       } catch (e) { persiste = false; }
       return null;
     }
     var previos = leer();
     (previos || semilla).forEach(function (r) { mapa[r.id] = r; });
+    /* Registros nuevos de la semilla (por ejemplo, una ampliación de plaza) se agregan sin tocar los que ya editaste ni los que borraste. */
+    var idsSemilla = semilla.map(function (r) { return r.id; });
+    if (previos) {
+      var vistos = {};
+      (conocidos || idsSemilla.filter(function (id) { return /^p0(0[1-9]|[1-7][0-9]|8[0-7])$/.test(id); })).forEach(function (id) { vistos[id] = 1; });
+      semilla.forEach(function (r) { if (!vistos[r.id] && !mapa[r.id]) mapa[r.id] = r; });
+    }
     function grabar() {
       if (!persiste) return;
-      try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify({ v: 1, regs: Object.keys(mapa).map(function (k) { return mapa[k]; }) })); }
+      try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify({ v: 1, semilla: idsSemilla, regs: Object.keys(mapa).map(function (k) { return mapa[k]; }) })); }
       catch (e) { persiste = false; aviso(); }
     }
     function aviso() {
@@ -334,7 +341,7 @@
     }
     function lista() { return Object.keys(mapa).map(function (k) { return mapa[k]; }).sort(function (a, b) { return a.orden - b.orden; }); }
     function avisar() { subs.forEach(function (f) { f(lista()); }); }
-    if (!previos) grabar();
+    if (!previos || !conocidos || conocidos.length !== idsSemilla.length) grabar();
     if (!persiste) aviso();
     window.RC_prospectos.montar(raiz, {
       respaldo: true,
