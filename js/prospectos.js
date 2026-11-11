@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  var ESTATUS = ['Prospecto', 'Muestra', 'Espera Definición', 'Aprobado', 'Descartado'];
+  var ESTATUS = ['Prospecto', 'Muestra', 'Espera Definición', 'Aprobado', 'Cliente', 'Descartado'];
   var PRIORIDADES = ['A', 'B', 'C'];
   var TIPOS = ['Cafetería', 'Empresa', 'Particular'];
   var MAX_BLOQUE = 150;      // tope de filas que se prueban al calcular cuántas caben en la pantalla
@@ -418,7 +418,7 @@
       var cuad = el('div', 'pros-fechas-grid'); gr.appendChild(cuad);
       var fx = {};
       ESTATUS.forEach(function (s, i) {
-        var w = el('div', 'pros-campo'); var l = el('label', null, s); l.htmlFor = 'pf-f' + i; w.appendChild(l);
+        var w = el('div', 'pros-campo'); var l = el('label', null, 'Fecha ' + s); l.htmlFor = 'pf-f' + i; w.appendChild(l);
         var d = el('input'); d.type = 'date'; d.id = 'pf-f' + i; d.value = base.fechas[s] || ''; w.appendChild(d); cuad.appendChild(w); fx[s] = d;
       });
       form.appendChild(gr);
