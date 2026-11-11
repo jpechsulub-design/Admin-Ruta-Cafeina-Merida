@@ -174,3 +174,9 @@ body.pros-bloqueo { overflow: hidden; }
   .pros-panel { height: 92vh; height: 92svh; }
   .pros-tabla .fija { min-width: 11rem; }
 }
+
+/* Inventario */
+.pros-tabla.inv-tabla { min-width: 1400px; }
+.pros-tabla td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 8.5rem; }
+.pros-tabla thead th.num .pros-th { text-align: right; }
+.pros-tabla.inv-tabla td.neg { min-width: 16rem; }
