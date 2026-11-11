@@ -160,6 +160,7 @@
     var d = [{ t: 'portada' }];
     est.comps.forEach(function (c) { d.push({ t: 'comp', c: c }); });
     if (est.cfg && est.cfg.pendientes && est.cfg.pendientes.length) d.push({ t: 'pend' });
+    if (est.cfg && est.cfg.resumenGrupos && est.cfg.resumenGrupos.length) d.push({ t: 'res' });
     return d;
   }
   function pie() { return el('p', 'dia-pie', 'Ruta Cafeína Mérida · Tel. 999 259 8155'); }
@@ -197,6 +198,20 @@
       var t = el('span'); t.appendChild(document.createTextNode('Primero, reconocer: ')); t.appendChild(el('em', null, c.hechoBien)); rec.appendChild(t);
       rec.appendChild(enlace('#competencia-' + c.slug, 'Ver ficha completa →'));
       escena.appendChild(cab); escena.appendChild(cuerpo); escena.appendChild(rec);
+    } else if (d.t === 'res') {
+      cab.appendChild(el('p', 'etiqueta', 'Resumen final'));
+      cab.appendChild(el('h3', null, 'Qué hacer frente a cada tipo de competidor'));
+      cuerpo = el('div', 'dia-cuerpo');
+      (cfg.resumenGrupos || []).forEach(function (g) {
+        var col = el('div', 'dia-col nuestra');
+        col.appendChild(el('h4', null, g.grupo));
+        if (g.quienes) { var q = el('p', null, g.quienes); q.style.cssText = 'font-size:var(--t-sm);color:var(--texto-suave);margin:-6px 0 8px'; col.appendChild(q); }
+        col.appendChild(el('p', null, g.texto));
+        cuerpo.appendChild(col);
+      });
+      var idea = el('div', 'dia-reconoce');
+      var ti = el('span'); ti.appendChild(document.createTextNode('En una sola idea: ')); ti.appendChild(el('em', null, cfg.ideaUnica || '')); idea.appendChild(ti);
+      escena.appendChild(cab); escena.appendChild(cuerpo); escena.appendChild(idea);
     } else {
       cab.appendChild(el('p', 'etiqueta', 'Antes de salir a vender'));
       cab.appendChild(el('h3', null, 'Lo que falta para reforzar el discurso'));

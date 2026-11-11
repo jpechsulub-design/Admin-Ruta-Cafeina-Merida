@@ -11,7 +11,7 @@ const datos = JSON.parse(fs.readFileSync('fuente/datos.json', 'utf8'));
 const n = (datos.competidores || []).length;
 const app = fs.readFileSync('plantilla/app.html', 'utf8')
   .replaceAll('{{N_COMP}}', String(n))
-  .replaceAll('{{N_DIAS}}', String(n + 2))
+  .replaceAll('{{N_DIAS}}', String(n + 1 + (datos.cfg && datos.cfg.pendientes ? 1 : 0) + (datos.cfg && datos.cfg.resumenGrupos ? 1 : 0)))
   .replaceAll('{{ACTUALIZACION}}', (datos.cfg && datos.cfg.actualizacion) || '');
 
 const N = 600000;
