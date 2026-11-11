@@ -10,9 +10,13 @@
 
   var ESTATUS = ['Prospecto', 'Muestra', 'Espera Definición', 'Aprobado', 'Descartado'];
   var PRIORIDADES = ['A', 'B', 'C'];
+  var TIPOS = ['Cafetería', 'Empresa', 'Particular'];
+  var MAX_BLOQUE = 150;      // tope de filas que se prueban al calcular cuántas caben en la pantalla
+  var RE_EMPRESA = /hoteleria|hospital|clinica|salud|torre|corporativ|universidad|educacion|call center|industri|oficina|plantilla|empresa|cobranza|agencias|medios|compania|grupo /;
   var ZONAS = ['Paseo de Montejo', 'García Lavín', 'Av. Yucatán', 'Francisco de Montejo', 'Las Américas', 'Norte', 'Centro', 'Por verificar'];
   var COLUMNAS = [
     { k: 'negocio', t: 'Nombre del negocio' },
+    { k: 'tipo', t: 'Tipo' },
     { k: 'contacto', t: 'Contacto' },
     { k: 'zona', t: 'Zona' },
     { k: 'colonia', t: 'Colonia' },
@@ -45,9 +49,14 @@
   }
   function idNuevo() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
   function fechasVacias() { var f = {}; ESTATUS.forEach(function (s) { f[s] = ''; }); return f; }
+  function inferirTipo(r) {
+    var t = norm((r.giro || '') + ' ' + (r.negocio || ''));
+    return RE_EMPRESA.test(t) ? 'Empresa' : 'Cafetería';
+  }
   function limpiar(r) {
     var o = {
       id: r.id, orden: Number(r.orden) || 0,
+      tipo: TIPOS.indexOf(r.tipo) >= 0 ? r.tipo : inferirTipo(r),
       negocio: String(r.negocio || '').trim(), contacto: String(r.contacto || '').trim(),
       zona: String(r.zona || '').trim(), colonia: String(r.colonia || '').trim(),
       direccion: String(r.direccion || '').trim(), telefono: String(r.telefono || '').trim(),
@@ -61,14 +70,15 @@
     return o;
   }
   function textoBusqueda(r) {
-    var partes = [r.negocio, r.contacto, r.zona, r.colonia, r.direccion, r.telefono, r.giro, r.prioridad, 'prioridad ' + r.prioridad, r.estatus, r.notas];
+    var partes = [r.negocio, r.tipo, 'tipo ' + r.tipo, r.contacto, r.zona, r.colonia, r.direccion, r.telefono, r.giro, r.prioridad, 'prioridad ' + r.prioridad, r.estatus, r.notas];
     ESTATUS.forEach(function (s) { if (r.fechas[s]) partes.push(s, fmt(r.fechas[s]), r.fechas[s]); });
     return norm(partes.join(' | '));
   }
   function csvCelda(v) { v = String(v == null ? '' : v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
 
   function montar(raiz, almacen) {
-    var regs = [], listo = false, sel = null, q = '', fPri = '', fEst = '', fZona = '';
+    var regs = [], listo = false, sel = null, q = '', fPri = '', fEst = '', fZona = '', fTipo = '';
+    var inicio = 0, pila = [], mostrados = 0, altoPrevio = 0;
     var orden = { k: 'orden', dir: 1 };
     var tokens = [], temporizador = null, avisoTimer = null;
     var modal = null, menuCtx = null, anterior = null;
@@ -81,7 +91,8 @@
     cuerpo.setAttribute('role', 'region');
     cuerpo.setAttribute('aria-label', 'Tabla de prospectos');
     var pie = el('p', 'pros-pie');
-    panel.appendChild(barra); panel.appendChild(cuerpo);
+    var pager = el('div', 'pros-pager'); pager.setAttribute('role', 'navigation'); pager.setAttribute('aria-label', 'Bloques de registros');
+    panel.appendChild(barra); panel.appendChild(cuerpo); panel.appendChild(pager);
     raiz.appendChild(panel); raiz.appendChild(pie);
 
     /* ----- Barra (siempre visible) ----- */
@@ -102,9 +113,10 @@
       var w = el('label', 'pros-filtro'); w.appendChild(el('span', null, etiqueta));
       var s = el('select'); var o0 = el('option', null, 'Todos'); o0.value = ''; s.appendChild(o0);
       opciones.forEach(function (o) { var x = el('option', null, o); x.value = o; s.appendChild(x); });
-      s.addEventListener('change', function () { fn(s.value); pintarFilas(); });
+      s.addEventListener('change', function () { fn(s.value); reiniciar(); });
       w.appendChild(s); return { w: w, s: s };
     }
+    var fT = selectFiltro('Tipo', TIPOS, function (v) { fTipo = v; });
     var fE = selectFiltro('Estatus', ESTATUS, function (v) { fEst = v; });
     var fP = selectFiltro('Prioridad', PRIORIDADES, function (v) { fPri = v; });
     var fZ = selectFiltro('Zona', ZONAS, function (v) { fZona = v; });
@@ -121,17 +133,23 @@
       extras.appendChild(archivo);
     }
     var fila1 = el('div', 'pros-fila'); fila1.appendChild(menu); fila1.appendChild(buscarWrap);
-    var fila2 = el('div', 'pros-fila pros-fila2'); fila2.appendChild(fE.w); fila2.appendChild(fP.w); fila2.appendChild(fZ.w);
+    var fila2 = el('div', 'pros-fila pros-fila2'); fila2.appendChild(fT.w); fila2.appendChild(fE.w); fila2.appendChild(fP.w); fila2.appendChild(fZ.w);
     var cuenta = el('p', 'pros-cuenta'); cuenta.setAttribute('aria-live', 'polite');
     fila2.appendChild(cuenta); fila2.appendChild(extras);
+    var bPrim = boton('« Primero', 'suave', function () { inicio = 0; pila = []; pintarFilas(); cuerpo.scrollTop = 0; });
+    var bAnt = boton('‹ Anterior', '', function () { if (pila.length) { inicio = pila.pop(); pintarFilas(); cuerpo.scrollTop = 0; } });
+    var rango = el('p', 'pros-rango'); rango.setAttribute('aria-live', 'polite');
+    var bSig = boton('Siguiente ›', 'oro', function () { if (mostrados && inicio + mostrados < totalLista) { pila.push(inicio); inicio += mostrados; pintarFilas(); cuerpo.scrollTop = 0; } });
+    pager.appendChild(bPrim); pager.appendChild(bAnt); pager.appendChild(rango); pager.appendChild(bSig);
+    var totalLista = 0;
     var estado = el('p', 'pros-estado'); estado.setAttribute('role', 'status');
     barra.appendChild(fila1); barra.appendChild(fila2); barra.appendChild(estado);
 
     inBuscar.addEventListener('input', function () {
       clearTimeout(temporizador);
-      temporizador = setTimeout(function () { q = inBuscar.value; tokens = norm(q).split(/\s+/).filter(Boolean); pintarFilas(); }, 120);
+      temporizador = setTimeout(function () { q = inBuscar.value; tokens = norm(q).split(/\s+/).filter(Boolean); reiniciar(); }, 120);
     });
-    inBuscar.addEventListener('keydown', function (e) { if (e.key === 'Escape' && inBuscar.value) { inBuscar.value = ''; q = ''; tokens = []; pintarFilas(); } });
+    inBuscar.addEventListener('keydown', function (e) { if (e.key === 'Escape' && inBuscar.value) { inBuscar.value = ''; q = ''; tokens = []; reiniciar(); } });
 
     function avisar(txt, malo) {
       estado.textContent = txt; estado.className = 'pros-estado' + (malo ? ' mal' : '');
@@ -150,7 +168,7 @@
         var b = el('button', 'pros-th', c.t); b.type = 'button';
         b.addEventListener('click', function () {
           if (orden.k === c.k) orden.dir = -orden.dir; else { orden.k = c.k; orden.dir = 1; }
-          pintarFilas();
+          reiniciar();
         });
         th.appendChild(b);
       }
@@ -178,48 +196,102 @@
         if (fEst && r.estatus !== fEst) return false;
         if (fPri && r.prioridad !== fPri) return false;
         if (fZona && r.zona !== fZona) return false;
+        if (fTipo && r.tipo !== fTipo) return false;
         for (var i = 0; i < tokens.length; i++) if (r._b.indexOf(tokens[i]) < 0) return false;
         return true;
       }).sort(comparar);
     }
-    function celda(txt, cls) { var td = el('td', cls || null); td.textContent = txt || ''; if (!txt) td.classList.add('nada'); return td; }
+    function celda(txt, cls) {
+      var td = el('td', cls || null);
+      if (txt) { var c = el('div', 'cl', txt); c.title = txt; td.appendChild(c); } else td.classList.add('nada');
+      return td;
+    }
+
+    function filaDe(r) {
+      var tr = el('tr'); tr.dataset.id = r.id; tr.tabIndex = 0;
+      if (r.id === sel) { tr.className = 'sel'; tr.setAttribute('aria-selected', 'true'); }
+      tr.appendChild(celda(r.negocio, 'fija neg'));
+      var tt = el('td', 'tipo-td'); tt.appendChild(el('span', 'tipo tipo-' + norm(r.tipo), r.tipo)); tr.appendChild(tt);
+      tr.appendChild(celda(r.contacto));
+      tr.appendChild(celda(r.zona));
+      tr.appendChild(celda(r.colonia));
+      tr.appendChild(celda(r.direccion, 'ancha'));
+      tr.appendChild(celda(r.telefono, 'tel'));
+      tr.appendChild(celda(r.giro, 'ancha'));
+      var tp = el('td'); tp.appendChild(el('span', 'pri pri-' + r.prioridad, r.prioridad)); tr.appendChild(tp);
+      var te = el('td'); te.appendChild(el('span', 'est est-' + ESTATUS.indexOf(r.estatus), r.estatus));
+      if (r.fechas[r.estatus]) te.appendChild(el('small', 'est-fecha', fmt(r.fechas[r.estatus])));
+      tr.appendChild(te);
+      var tf = el('td', 'fechas');
+      var hay = false;
+      ESTATUS.forEach(function (s) {
+        if (!r.fechas[s]) return; hay = true;
+        var c = el('span', 'fch'); c.appendChild(el('b', null, s)); c.appendChild(document.createTextNode(' ' + fmt(r.fechas[s]))); tf.appendChild(c);
+      });
+      if (!hay) { tf.textContent = 'Sin fechas'; tf.classList.add('nada'); }
+      tr.appendChild(tf);
+      tr.appendChild(celda(r.notas, 'notas'));
+      return tr;
+    }
+    /* Dibuja desde la posición "desde" tantas filas como quepan en el alto visible
+       de la tabla (sin barra vertical) y devuelve cuántas dibujó. */
+    function dibujar(lista, desde) {
+      tbody.innerHTML = '';
+      var tope = Math.min(lista.length, desde + MAX_BLOQUE);
+      for (var i = desde; i < tope; i++) tbody.appendChild(filaDe(lista[i]));
+      var k = tbody.children.length;
+      if (!k) return 0;
+      var base = cuerpo.getBoundingClientRect().top, alto = cuerpo.clientHeight, cabe = 0;
+      for (var j = 0; j < k; j++) {
+        if (tbody.children[j].getBoundingClientRect().bottom - base <= alto + 0.5) cabe = j + 1; else break;
+      }
+      if (cabe < 1) cabe = 1;
+      while (tbody.children.length > cabe) tbody.removeChild(tbody.lastChild);
+      return cabe;
+    }
+    function reiniciar() { inicio = 0; pila = []; pintarFilas(); cuerpo.scrollTop = 0; }
+    function irA(id) {
+      var lista = visibles(), idx = -1;
+      for (var i = 0; i < lista.length; i++) if (lista[i].id === id) { idx = i; break; }
+      if (idx < 0) return;
+      if (idx >= inicio && idx < inicio + mostrados) return;
+      inicio = 0; pila = [];
+      for (var guardia = 0; guardia < 400; guardia++) {
+        var n = dibujar(lista, inicio);
+        if (!n || idx < inicio + n) break;
+        pila.push(inicio); inicio += n;
+      }
+    }
 
     function pintarFilas() {
       ths();
       var lista = visibles();
-      tbody.innerHTML = '';
-      lista.forEach(function (r) {
-        var tr = el('tr'); tr.dataset.id = r.id; tr.tabIndex = 0;
-        if (r.id === sel) { tr.className = 'sel'; tr.setAttribute('aria-selected', 'true'); }
-        var td0 = celda(r.negocio, 'fija neg'); tr.appendChild(td0);
-        tr.appendChild(celda(r.contacto));
-        tr.appendChild(celda(r.zona));
-        tr.appendChild(celda(r.colonia));
-        tr.appendChild(celda(r.direccion, 'ancha'));
-        tr.appendChild(celda(r.telefono, 'tel'));
-        tr.appendChild(celda(r.giro, 'ancha'));
-        var tp = el('td'); tp.appendChild(el('span', 'pri pri-' + r.prioridad, r.prioridad)); tr.appendChild(tp);
-        var te = el('td'); te.appendChild(el('span', 'est est-' + ESTATUS.indexOf(r.estatus), r.estatus));
-        if (r.fechas[r.estatus]) te.appendChild(el('small', 'est-fecha', fmt(r.fechas[r.estatus])));
-        tr.appendChild(te);
-        var tf = el('td', 'fechas');
-        var hay = false;
-        ESTATUS.forEach(function (s) {
-          if (!r.fechas[s]) return; hay = true;
-          var c = el('span', 'fch'); c.appendChild(el('b', null, s)); c.appendChild(document.createTextNode(' ' + fmt(r.fechas[s]))); tf.appendChild(c);
-        });
-        if (!hay) { tf.textContent = 'Sin fechas'; tf.classList.add('nada'); }
-        tr.appendChild(tf);
-        tr.appendChild(celda(r.notas, 'notas'));
-        tbody.appendChild(tr);
-      });
+      totalLista = lista.length;
+      while (inicio >= lista.length && inicio > 0) { inicio = pila.length ? pila.pop() : 0; }
+      mostrados = dibujar(lista, inicio);
+      altoPrevio = cuerpo.clientHeight;
       var total = regs.length;
-      cuenta.textContent = listo ? 'Mostrando ' + lista.length + ' de ' + total : '';
+      cuenta.textContent = listo ? (lista.length === total ? total + ' prospectos' : lista.length + ' de ' + total + ' coinciden con los filtros') : '';
+      if (listo && mostrados) {
+        rango.textContent = 'Registros ' + (inicio + 1) + ' a ' + (inicio + mostrados) + ' de ' + lista.length;
+      } else rango.textContent = listo ? 'Sin registros para mostrar' : '';
+      bPrim.disabled = !(inicio > 0); bAnt.disabled = !pila.length;
+      bSig.disabled = !(mostrados && inicio + mostrados < lista.length);
       vacio.hidden = !listo || lista.length > 0;
       vacio.textContent = total ? 'Ningún prospecto coincide con la búsqueda o los filtros.' : 'Todavía no hay prospectos. Usa «+ Agregar» para registrar el primero.';
       resumen();
       botones();
     }
+    var temporizadorTam = null;
+    function alCambiarTamano() {
+      clearTimeout(temporizadorTam);
+      temporizadorTam = setTimeout(function () {
+        if (!listo || cuerpo.clientHeight === altoPrevio) return;
+        pila = []; pintarFilas();
+      }, 150);
+    }
+    window.addEventListener('resize', alCambiarTamano);
+    if (window.ResizeObserver) new ResizeObserver(alCambiarTamano).observe(cuerpo);
     function ths() {
       Array.prototype.forEach.call(trh.children, function (th) {
         var b = th.querySelector('button');
@@ -331,6 +403,7 @@
       var dl = el('datalist'); dl.id = 'pf-zonas'; ZONAS.forEach(function (z) { var o = el('option'); o.value = z; dl.appendChild(o); }); form.appendChild(dl);
       var f = {};
       f.negocio = campo(form, 'negocio', 'Nombre del negocio', 'text', base.negocio, { req: true, ancho: 'c2' });
+      f.tipo = campo(form, 'tipo', 'Tipo de prospecto', 'select', base.tipo, { opciones: TIPOS });
       f.contacto = campo(form, 'contacto', 'Nombre del contacto', 'text', base.contacto);
       f.zona = campo(form, 'zona', 'Zona', 'text', base.zona, { lista: 'pf-zonas' });
       f.colonia = campo(form, 'colonia', 'Colonia', 'text', base.colonia);
@@ -364,7 +437,7 @@
         var nuevo = {
           id: r ? r.id : idNuevo(),
           orden: r ? r.orden : (regs.reduce(function (m, x) { return Math.max(m, x.orden); }, 0) + 1),
-          negocio: f.negocio.value, contacto: f.contacto.value, zona: f.zona.value, colonia: f.colonia.value,
+          negocio: f.negocio.value, tipo: f.tipo.value, contacto: f.contacto.value, zona: f.zona.value, colonia: f.colonia.value,
           direccion: f.direccion.value, telefono: f.telefono.value, giro: f.giro.value,
           prioridad: f.prioridad.value, estatus: f.estatus.value, notas: f.notas.value, fechas: fechasVacias()
         };
@@ -376,7 +449,7 @@
           sel = nuevo.id; cerrarModal(); avisar('Guardado: ' + nuevo.negocio);
           var i = regs.findIndex(function (x) { return x.id === nuevo.id; });
           nuevo._b = textoBusqueda(nuevo); if (i >= 0) regs[i] = nuevo; else regs.push(nuevo);
-          pintarFilas(); var tr = tbody.querySelector('tr.sel'); if (tr && tr.scrollIntoView) tr.scrollIntoView({ block: 'nearest' });
+          irA(nuevo.id); pintarFilas(); var tr = tbody.querySelector('tr.sel'); if (tr && tr.scrollIntoView) tr.scrollIntoView({ block: 'nearest' });
         }, function () {
           bg.disabled = false; bg.textContent = r ? 'Guardar cambios' : 'Guardar prospecto';
           msg.textContent = 'No se pudo guardar. Revisa la conexión e inténtalo otra vez.'; msg.hidden = false;
@@ -413,12 +486,12 @@
     }
     function exportarCsv() {
       var lista = visibles();
-      var cab = ['Nombre del negocio', 'Nombre del contacto', 'Zona', 'Colonia', 'Dirección', 'Teléfono', 'Perfil o giro', 'Prioridad', 'Estatus'];
+      var cab = ['Nombre del negocio', 'Tipo', 'Nombre del contacto', 'Zona', 'Colonia', 'Dirección', 'Teléfono', 'Perfil o giro', 'Prioridad', 'Estatus'];
       ESTATUS.forEach(function (s) { cab.push('Fecha ' + s); });
       cab.push('Notas comerciales');
       var filas = [cab.map(csvCelda).join(',')];
       lista.forEach(function (r) {
-        var c = [r.negocio, r.contacto, r.zona, r.colonia, r.direccion, r.telefono, r.giro, r.prioridad, r.estatus];
+        var c = [r.negocio, r.tipo, r.contacto, r.zona, r.colonia, r.direccion, r.telefono, r.giro, r.prioridad, r.estatus];
         ESTATUS.forEach(function (s) { c.push(fmt(r.fechas[s])); });
         c.push(r.notas); filas.push(c.map(csvCelda).join(','));
       });
@@ -463,5 +536,5 @@
     pintarFilas();
   }
 
-  window.RC_prospectos = { montar: montar, ESTATUS: ESTATUS, limpiar: limpiar };
+  window.RC_prospectos = { montar: montar, ESTATUS: ESTATUS, TIPOS: TIPOS, limpiar: limpiar };
 })();

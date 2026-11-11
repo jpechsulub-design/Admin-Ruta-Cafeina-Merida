@@ -143,3 +143,34 @@ body.pros-bloqueo { overflow: hidden; }
   .pros-caja, .pros-caja.ancha { max-width: none; max-height: none; min-height: 100%; border-radius: 0; }
   .pros-caja.angosta { min-height: 0; align-self: center; margin: 16px; width: auto; }
 }
+
+/* Tipo de prospecto */
+.pros-tabla td.tipo-td { min-width: 8rem; white-space: nowrap; }
+.tipo { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: var(--t-xs); font-weight: 600; letter-spacing: .04em; border: 1px solid var(--linea); white-space: nowrap; }
+.tipo-cafeteria { color: var(--oro-claro); border-color: var(--oro); background: rgba(201,163,90,.12); }
+.tipo-empresa { color: #9cc3e6; border-color: #4a6f92; background: rgba(110,160,210,.12); }
+.tipo-particular { color: #a9d6a0; border-color: #4d7a46; background: rgba(120,190,110,.12); }
+
+/* Bloques de registros */
+.pros-tabla { min-width: 1640px; }
+.pros-pager {
+  flex: none; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 14px;
+  padding: 10px 16px; background: var(--tostado-2); border-top: 1px solid var(--linea);
+}
+.pros-rango { margin: 0; flex: 1 1 14rem; text-align: center; font-size: var(--t-sm); color: var(--crema-2); font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) {
+  .pros-pager { padding: 10px 12px; }
+  .pros-pager .pros-btn { flex: 1 1 0; text-align: center; padding-inline: 8px; }
+  .pros-rango { order: -1; flex-basis: 100%; }
+}
+
+/* Filas compactas: así caben más registros en cada bloque. El texto completo se ve al pasar el cursor o al editar. */
+.pros-tabla td { padding: 8px 14px; }
+.pros-tabla td .cl { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.pros-tabla td.neg { font-size: 1.05rem; }
+.pros-tabla td.notas { min-width: 20rem; max-width: 30rem; }
+.pros-tabla td.fechas { min-width: 13rem; }
+@media (max-width: 640px) {
+  .pros-panel { height: 92vh; height: 92svh; }
+  .pros-tabla .fija { min-width: 11rem; }
+}
