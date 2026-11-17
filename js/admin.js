@@ -308,6 +308,27 @@
     if (leerRuta()) alCambiarRuta();
   };
 
+  /* ---------- Respaldo: avisa de los cambios sin respaldar y pide al navegador que no borre los datos ---------- */
+  function vigilarRespaldo(sec, clave, hayDatos) {
+    var kc = clave + '_sin_respaldo', ku = clave + '_ultimo_respaldo';
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+    function leer(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+    function poner(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    function pintar() {
+      var a = document.querySelector('#' + sec + ' .pros-aviso'); if (!a) return;
+      var n = parseInt(leer(kc), 10) || 0, u = leer(ku);
+      var cuando = u ? new Date(u).toLocaleString('es-MX') : null;
+      if (n > 0) a.textContent = n + (n === 1 ? ' cambio sin respaldar' : ' cambios sin respaldar') + '. Estos datos viven solo en este navegador: pulsa «Respaldo» para guardar un archivo en tu computadora.' + (cuando ? ' Último respaldo: ' + cuando : ' Aún no has hecho ningún respaldo.');
+      else if (cuando) a.textContent = 'Último respaldo: ' + cuando;
+    }
+    if (hayDatos && !leer(ku) && !(parseInt(leer(kc), 10) > 0)) poner(kc, '1');
+    setTimeout(pintar, 300);
+    return {
+      cambio: function () { poner(kc, String((parseInt(leer(kc), 10) || 0) + 1)); pintar(); },
+      respaldado: function () { poner(ku, new Date().toISOString()); poner(kc, '0'); pintar(); }
+    };
+  }
+
   /* ---------- Prospectos: se guardan en este navegador (localStorage) ---------- */
   var CLAVE_LOCAL = 'rc_prospectos_v1';
   function montarProspectos(semilla) {
@@ -343,14 +364,16 @@
     function avisar() { subs.forEach(function (f) { f(lista()); }); }
     if (!previos || !conocidos || conocidos.length !== idsSemilla.length) grabar();
     if (!persiste) aviso();
+    var vig = vigilarRespaldo('prospectos', CLAVE_LOCAL, !!previos);
     window.RC_prospectos.montar(raiz, {
       respaldo: true,
       suscribir: function (ok) { subs.push(ok); setTimeout(function () { ok(lista()); }, 0); },
-      guardar: function (r) { mapa[r.id] = JSON.parse(JSON.stringify(r)); grabar(); avisar(); return Promise.resolve(); },
-      borrar: function (id) { delete mapa[id]; grabar(); avisar(); return Promise.resolve(); },
+      guardar: function (r) { mapa[r.id] = JSON.parse(JSON.stringify(r)); grabar(); vig.cambio(); avisar(); return Promise.resolve(); },
+      borrar: function (id) { delete mapa[id]; grabar(); vig.cambio(); avisar(); return Promise.resolve(); },
       descargar: function (nombre, texto, tipo) {
         var b = new Blob([texto], { type: tipo || 'text/plain' }), u = URL.createObjectURL(b), a = document.createElement('a');
         a.href = u; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+        if (/^respaldo-/.test(nombre)) vig.respaldado();
         setTimeout(function () { URL.revokeObjectURL(u); }, 4000); return Promise.resolve();
       }
     });
@@ -385,14 +408,16 @@
     function avisar() { subs.forEach(function (f) { f(lista()); }); }
     if (!previos) grabar();
     if (!persiste) aviso();
+    var vig = vigilarRespaldo('inventario', CLAVE_INV, !!previos);
     window.RC_inventario.montar(raiz, {
       respaldo: true,
       suscribir: function (ok) { subs.push(ok); setTimeout(function () { ok(lista()); }, 0); },
-      guardar: function (r) { mapa[r.id] = JSON.parse(JSON.stringify(r)); grabar(); avisar(); return Promise.resolve(); },
-      borrar: function (id) { delete mapa[id]; grabar(); avisar(); return Promise.resolve(); },
+      guardar: function (r) { mapa[r.id] = JSON.parse(JSON.stringify(r)); grabar(); vig.cambio(); avisar(); return Promise.resolve(); },
+      borrar: function (id) { delete mapa[id]; grabar(); vig.cambio(); avisar(); return Promise.resolve(); },
       descargar: function (nombre, texto, tipo) {
         var b = new Blob([texto], { type: tipo || 'text/plain' }), u = URL.createObjectURL(b), a = document.createElement('a');
         a.href = u; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+        if (/^respaldo-/.test(nombre)) vig.respaldado();
         setTimeout(function () { URL.revokeObjectURL(u); }, 4000); return Promise.resolve();
       }
     });
