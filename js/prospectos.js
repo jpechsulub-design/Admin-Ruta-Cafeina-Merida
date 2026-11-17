@@ -13,7 +13,7 @@
   var TIPOS = ['Cafetería', 'Empresa', 'Particular'];
   var MAX_BLOQUE = 150;      // tope de filas que se prueban al calcular cuántas caben en la pantalla
   var RE_EMPRESA = /hoteleria|hospital|clinica|salud|torre|corporativ|universidad|educacion|call center|industri|oficina|plantilla|empresa|cobranza|agencias|medios|compania|grupo /;
-  var ZONAS = ['Paseo de Montejo', 'García Lavín', 'Av. Yucatán', 'Francisco de Montejo', 'Las Américas', 'Norte', 'Centro', 'Por verificar'];
+  var ZONAS = ['Paseo de Montejo', 'Prolongación de Paseo de Montejo', 'Av. Yucatán', 'García Lavín', 'Av. Díaz Bolio', 'Av. Líbano', 'Av. Cámara de Comercio', 'Francisco de Montejo', 'Las Américas', 'Norte', 'Centro', 'Por verificar'];
   var COLUMNAS = [
     { k: 'negocio', t: 'Nombre del negocio' },
     { k: 'tipo', t: 'Tipo' },
